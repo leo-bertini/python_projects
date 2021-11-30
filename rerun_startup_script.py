@@ -31,7 +31,7 @@ def main():
     project = input("Enter the project ID:\n")
     instance_list = get_instance_list(project)
     for instance in instance_list:
-        # We do not want to rerun the startup scripts on Windows instances and COS and GKE. Suse is also not supported. The OS type is reported in the licences information
+        # We do not want to rerun the startup scripts on Windows, COS and GKE instances. Suse is also not supported. The OS type is reported in the licence metatada keys
         if ("windows" not in instance["disks"][0]["licenses"][0]) and ("cos-cloud" not in instance["disks"][0]["licenses"][0]) and ("suse-cloud" not in instance["disks"][0]["licenses"][0]) and ("gke" not in instance["name"]):
             rerun_linux_startup_script(project, instance['name'], instance['zone'])  
 main()
