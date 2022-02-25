@@ -20,7 +20,7 @@ def get_instance_list(project):
 
 # Log into the instance via IAP and run the command to reload the startup metadata
 def rerun_linux_startup_script(project, instance, zone):
-    iapconnect = f"gcloud --project={project} compute ssh {instance} --tunnel-through-iap --zone={zone} --command='sudo google_metadata_script_runner startup'"
+    iapconnect = f"gcloud --project={project} compute ssh {instance} --tunnel-through-iap --zone={zone} --command='sudo google_metadata_script_runner --script-type=startup || sudo google_metadata_script_runner startup'"
     iapsession = subprocess.Popen(iapconnect, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, universal_newlines=True)
     while iapsession.poll() is None:
         output = iapsession.stdout.readline()
