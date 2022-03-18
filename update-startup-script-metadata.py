@@ -1,9 +1,8 @@
-from pickle import TRUE
 import subprocess
 import json
 
-linux_startup_script_metadata = 'startup-script-url=https://storage.googleapis.com/rs-gce-instances-scripts-master/linux/startup_scripts/rackspace_gcp_sysprep_v2.2.sh'
-windows_startup_script_metadata = 'sysprep-specialize-script-url=gs://rs-gce-instances-scripts-master/windows/rs-config_v2.ps1'
+linux_startup_script_metadata = 'startup-script-url=https://storage.googleapis.com/rs-gce-instances-scripts-master/linux/startup_scripts/rackspace_gcp_sysprep_v1.sh'
+windows_startup_script_metadata = 'sysprep-specialize-script-url=gs://rs-gce-instances-scripts-master/windows/rs-config.ps1'
 
 # Get the list of all the instances in a given project in json format
 def get_instance_list(project):
