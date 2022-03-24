@@ -7,6 +7,7 @@
     Description: This script gets the list of instances of a given project, connects to them through IAP and rerun the startup metatada
 '''
 
+from socket import timeout
 import subprocess
 import json
 
@@ -20,12 +21,11 @@ def get_instance_list(project):
 
 # Log into the instance via IAP and run the command to reload the startup metadata
 def rerun_linux_startup_script(project, instance, zone):
-    iapconnect = f"gcloud --project={project} compute ssh {instance} --tunnel-through-iap --zone={zone} --command='sudo google_metadata_script_runner --script-type=startup || sudo google_metadata_script_runner startup'"
-    iapsession = subprocess.Popen(iapconnect, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, universal_newlines=True)
-    while iapsession.poll() is None:
-        output = iapsession.stdout.readline()
-        print('\033[1;32m' + instance + '\33[39m' + ": " + output)
-    iapsession.kill
+    print('\033[1;32m' + instance + '\33[39m')
+    iapconnect = f"gcloud --project={project} compute ssh {instance} --tunnel-through-iap --zone={zone} --command='curl https://storage.googleapis.com/rs-gce-instances-scripts-master/linux/startup_scripts/rackspace_gcp_sysprep_v1.sh -o rackspace_gcp_sysprep_v1.sh && chmod u+x rackspace_gcp_sysprep_v1.sh && sudo ./rackspace_gcp_sysprep_v1.sh &'"
+    iapcommand = subprocess.Popen(iapconnect, stdin=subprocess.PIPE, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    print('Startup script reload command sent!')
+    iapcommand.kill
 
 def main():
     project = input("Enter the project ID:\n")
