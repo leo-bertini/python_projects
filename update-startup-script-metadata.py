@@ -7,7 +7,7 @@ windows_startup_script_metadata = 'sysprep-specialize-script-url=gs://rs-gce-ins
 
 # Get the list of all the instances in a given project in json format
 def get_instance_list(project):
-    instance_list = subprocess.Popen(f"gcloud --project={project} compute instances list --format='json(name,zone,disks)'", universal_newlines=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+    instance_list = subprocess.Popen(f"gcloud --project={project} compute instances list --format='json(name,zone,disks,metadata)'", universal_newlines=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
     output, error = instance_list.communicate()
     parsed_list = json.loads(output)
     instance_list.kill
@@ -30,15 +30,18 @@ def main():
         exception = None
         instance_group = False
         try:
-            if ('created-by' in instance['metadata']['items'][0]['key']):
-                 instance_group = True
+            for item in instance['metadata']['items']:
+                if ('created-by' in item['key']):
+                    instance_group = True
+                    break
         except:
             None
         for disk in instance['disks']:
             try:
                 licenses = disk['licenses']
             except:
-                exception = 'OS info not found'
+                exception = True
+                break
             else:
                 for license in licenses:
                     if 'win' in license:
@@ -46,7 +49,8 @@ def main():
                         break
                     elif any(item in license for item in supported_linux):
                         os = 'linux'
-        if (not instance_group) and ('gke' not in instance['name']) :
+                        break
+        if (not instance_group):
             if os == 'linux':
                 add_startup_script(project, instance['name'], instance['zone'], linux_startup_script_metadata)
             elif os == 'windows':
@@ -54,10 +58,10 @@ def main():
             else:
                 print('\033[1;32m' + instance['name'] + '\33[39m')
                 print('OS not supported!\n')
-        elif os == None and exception != None:
+        elif os == None and exception == True:
             print('\033[1;32m' + instance['name'] + '\33[39m')
-            print(exception + '\n')
+            print('OS info not found' + '\n')
         else:
             print('\033[1;32m' + instance['name'] + '\33[39m')
-            print('VM is part of an instance group, please update the instance template.\n')
+            print('VM is part of an instance group, please create a new instance template.\n')
 main()
