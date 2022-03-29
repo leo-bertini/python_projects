@@ -54,5 +54,5 @@ def main():
             print('This is a Windows VM')
         else:
             print('\033[1;32m' + instance['name'] + '\33[39m')
-            print('OS not supported!')
+            print('OS not supported!\n')
 main()
