@@ -24,7 +24,7 @@ def rerun_linux_startup_script(project, instance, zone):
     print('\033[1;32m' + instance + '\33[39m')
     iapconnect = f"gcloud --project={project} compute ssh {instance} --tunnel-through-iap --zone={zone} --command='curl https://storage.googleapis.com/rs-gce-instances-scripts-master/linux/startup_scripts/rackspace_gcp_sysprep_v1.sh -o rackspace_gcp_sysprep_v1.sh &>/dev/null && chmod u+x rackspace_gcp_sysprep_v1.sh && sudo ./rackspace_gcp_sysprep_v1.sh & &> /dev/null'"
     iapcommand = subprocess.Popen(iapconnect, stdin=subprocess.PIPE, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    print('Startup script reload command sent!')
+    print('Startup script reload command sent!\n')
     iapcommand.kill
 
 def main():
@@ -50,7 +50,7 @@ def main():
             rerun_linux_startup_script(project, instance['name'], instance['zone'])
         elif os == 'windows':
             print('\033[1;32m' + instance['name'] + '\33[39m')
-            print('This is a Windows VM')
+            print('This is a Windows VM\n')
         elif os == None and exception != None:
             print(exception + '\n')
         else:
