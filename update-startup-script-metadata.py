@@ -1,7 +1,7 @@
 import subprocess
 import json
 
-supported_linux = ["ubuntu", "centos", "rhel", "debian"]
+supported_linux = ['ubuntu', 'centos', 'rhel', 'debian']
 linux_startup_script_metadata = 'linux-startup-script-url=https://storage.googleapis.com/rs-gce-instances-scripts-master/linux/startup_scripts/rackspace_gcp_sysprep_v1.sh'
 windows_startup_script_metadata = 'sysprep-specialize-script-url=gs://rs-gce-instances-scripts-master/windows/rs-config.ps1'
 
@@ -23,7 +23,7 @@ def add_startup_script(project, instance, zone, startup_script_metadata):
     add_metadata.kill
 
 def main():
-    project = input("Enter the project ID:\n")
+    project = input('Enter the project ID:\n')
     instance_list = get_instance_list(project)
     for instance in instance_list:
         os = None
@@ -38,14 +38,14 @@ def main():
             try:
                 licenses = disk['licenses']
             except:
-                exception = "OS info not found"
+                exception = 'OS info not found'
             else:
                 for license in licenses:
-                    if "win" in license:
-                        os = "windows"
+                    if 'win' in license:
+                        os = 'windows'
                         break
                     elif any(item in license for item in supported_linux):
-                        os = "linux"
+                        os = 'linux'
         if os == None and exception != None:
             os = exception
         if (not instance_group) and ('gke' not in instance['name']) :

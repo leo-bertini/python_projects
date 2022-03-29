@@ -9,7 +9,7 @@
 
 import subprocess
 import json
-supported_linux = ["ubuntu", "centos", "rhel", "debian"]
+supported_linux = ['ubuntu', 'centos', 'rhel', 'debian']
 
 # Get the list of all the instances in a given project in json format
 def get_instance_list(project):
@@ -28,7 +28,7 @@ def rerun_linux_startup_script(project, instance, zone):
     iapcommand.kill
 
 def main():
-    project = input("Enter the project ID:\n")
+    project = input('Enter the project ID:\n')
     instance_list = get_instance_list(project)
     for instance in instance_list:
         os = None
@@ -37,19 +37,20 @@ def main():
             try:
                 licenses = disk['licenses']
             except:
-                exception = "OS info not found"
+                exception = 'OS info not found'
             else:
                 for license in licenses:
-                    if "win" in license:
-                        os = "windows"
+                    if 'win' in license:
+                        os = 'windows'
                         break
                     elif any(item in license for item in supported_linux):
-                        os = "linux"
+                        os = 'linux'
+                        break
         if os == None and exception != None:
             os = exception
-        if os == "linux":
+        if os == 'linux':
             rerun_linux_startup_script(project, instance['name'], instance['zone'])
-        elif os == "windows":
+        elif os == 'windows':
             print('\033[1;32m' + instance['name'] + '\33[39m')
             print('This is a Windows VM')
         else:
