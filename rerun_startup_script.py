@@ -32,7 +32,7 @@ def main():
     instance_list = get_instance_list(project)
     for instance in instance_list:
         os = None
-        exception = None
+        exception= None
         for disk in instance['disks']:
             try:
                 licenses = disk['licenses']
@@ -46,13 +46,13 @@ def main():
                     elif any(item in license for item in supported_linux):
                         os = 'linux'
                         break
-        if os == None and exception != None:
-            os = exception
         if os == 'linux':
             rerun_linux_startup_script(project, instance['name'], instance['zone'])
         elif os == 'windows':
             print('\033[1;32m' + instance['name'] + '\33[39m')
             print('This is a Windows VM')
+        elif os == None and exception != None:
+            print(exception + '\n')
         else:
             print('\033[1;32m' + instance['name'] + '\33[39m')
             print('OS not supported!\n')

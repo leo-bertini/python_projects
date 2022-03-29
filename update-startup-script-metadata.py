@@ -46,8 +46,6 @@ def main():
                         break
                     elif any(item in license for item in supported_linux):
                         os = 'linux'
-        if os == None and exception != None:
-            os = exception
         if (not instance_group) and ('gke' not in instance['name']) :
             if os == 'linux':
                 add_startup_script(project, instance['name'], instance['zone'], linux_startup_script_metadata)
@@ -56,4 +54,10 @@ def main():
             else:
                 print('\033[1;32m' + instance['name'] + '\33[39m')
                 print('OS not supported!\n')
+        elif os == None and exception != None:
+            print('\033[1;32m' + instance['name'] + '\33[39m')
+            print(exception + '\n')
+        else:
+            print('\033[1;32m' + instance['name'] + '\33[39m')
+            print('VM is part of an instance group, please update the instance template.\n')
 main()
