@@ -2,8 +2,8 @@ import subprocess
 import json
 
 supported_linux = ['ubuntu', 'centos', 'rhel', 'debian']
-linux_startup_script_metadata = 'startup-script-url=https://storage.googleapis.com/rs-gce-instances-scripts-master/linux/startup_scripts/rackspace_gcp_sysprep_v1.sh'
-windows_startup_script_metadata = 'sysprep-specialize-script-url=gs://rs-gce-instances-scripts-master/windows/rs-config.ps1'
+linux_startup_script_metadata = 'startup-script-url=gs://rs-gce-instances-scripts-master/linux/startup_scripts/rackspace_gcp_sysprep_v1.sh'
+windows_startup_script_metadata = 'sysprep-specialize-script-url=https://storage.googleapis.com/rs-gce-instances-scripts-master/windows/rs-config.ps1'
 
 # Get the list of all the instances in a given project in json format
 def get_instance_list(project):

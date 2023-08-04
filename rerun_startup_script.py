@@ -7,13 +7,13 @@
     Description: This script gets the list of instances of a given project, connects to them through IAP and rerun the startup metatada
 '''
 
-import subprocess
-import json
+import subprocess, json
 supported_linux = ['ubuntu', 'centos', 'rhel', 'debian']
 
 # Get the list of all the instances in a given project in json format
 def get_instance_list(project):
-    instance_list = subprocess.Popen(f"gcloud --project={project} compute instances list --format='json(name,zone,disks)'", universal_newlines=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+    instance_list_command = f"gcloud --project={project} compute instances list --format='json(name,zone,disks)'"
+    instance_list = subprocess.Popen(instance_list_command, universal_newlines=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
     output, error = instance_list.communicate()
     parsed_list = json.loads(output)
     instance_list.kill
