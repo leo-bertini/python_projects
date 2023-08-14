@@ -4,8 +4,8 @@
     Date created: 04/08/2023
     Date last modified: 08/08/2023
     Python Version: 3.7
-    Description: This script deploys monitoring alerts from repo https://github.com/rackspace-infrastructure-automation/mgcp-terraform-modules.git to O+ customers.
-    Input: sso username, sso password, project ID, deploy NAT alert yes|no, deploy CSQL alert yes|no.
+    Description: This script authenticates the user on a O+ customer project via janus and deploys monitoring alerts from repo https://github.com/rackspace-infrastructure-automation/mgcp-terraform-modules.git.
+    Inputs: sso username, sso password, project ID, primary email address (for alert notification), deploy NAT alert yes|no, deploy CSQL alert yes|no.
 '''
 
 import os, shutil, subprocess, requests, json
