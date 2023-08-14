@@ -7,12 +7,13 @@
     Description: This script gets the list of instances of a given project, connects to them through IAP and rerun the startup metatada
 '''
 
-import subprocess
-import json
+import subprocess, json
+supported_linux = ['ubuntu', 'centos', 'rhel', 'debian']
 
 # Get the list of all the instances in a given project in json format
 def get_instance_list(project):
-    instance_list = subprocess.Popen(f"gcloud --project={project} compute instances list --format=json", universal_newlines=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+    instance_list_command = f"gcloud --project={project} compute instances list --format='json(name,zone,disks)'"
+    instance_list = subprocess.Popen(instance_list_command, universal_newlines=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
     output, error = instance_list.communicate()
     parsed_list = json.loads(output)
     instance_list.kill
@@ -20,18 +21,39 @@ def get_instance_list(project):
 
 # Log into the instance via IAP and run the command to reload the startup metadata
 def rerun_linux_startup_script(project, instance, zone):
-    iapconnect = f"gcloud --project={project} compute ssh {instance} --tunnel-through-iap --zone={zone} --command='sudo google_metadata_script_runner --script-type=startup || sudo google_metadata_script_runner startup'"
-    iapsession = subprocess.Popen(iapconnect, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, universal_newlines=True)
-    while iapsession.poll() is None:
-        output = iapsession.stdout.readline()
-        print('\033[1;32m' + instance + '\33[39m' + ": " + output)
-    iapsession.kill
+    print('\033[1;32m' + instance + '\33[39m')
+    iapconnect = f"gcloud --project={project} compute ssh {instance} --tunnel-through-iap --zone={zone} --command='curl https://storage.googleapis.com/rs-gce-instances-scripts-master/linux/startup_scripts/rackspace_gcp_sysprep_v1.sh -o rackspace_gcp_sysprep_v1.sh &>/dev/null && chmod u+x rackspace_gcp_sysprep_v1.sh && sudo ./rackspace_gcp_sysprep_v1.sh & &> /dev/null'"
+    iapcommand = subprocess.Popen(iapconnect, stdin=subprocess.PIPE, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    print('Startup script reload command sent!\n')
+    iapcommand.kill
 
 def main():
-    project = input("Enter the project ID:\n")
+    project = input('Enter the project ID:\n')
     instance_list = get_instance_list(project)
     for instance in instance_list:
-        # We do not want to rerun the startup scripts on Windows, COS and GKE instances. Suse is also not supported. The OS type is reported in the licence metatada keys
-        if ("windows" not in instance["disks"][0]["licenses"][0]) and ("cos-cloud" not in instance["disks"][0]["licenses"][0]) and ("suse-cloud" not in instance["disks"][0]["licenses"][0]) and ("gke" not in instance["name"]):
-            rerun_linux_startup_script(project, instance['name'], instance['zone'])  
+        os = None
+        exception= None
+        for disk in instance['disks']:
+            try:
+                licenses = disk['licenses']
+            except:
+                exception = 'OS info not found'
+            else:
+                for license in licenses:
+                    if 'win' in license:
+                        os = 'windows'
+                        break
+                    elif any(item in license for item in supported_linux):
+                        os = 'linux'
+                        break
+        if os == 'linux':
+            rerun_linux_startup_script(project, instance['name'], instance['zone'])
+        elif os == 'windows':
+            print('\033[1;32m' + instance['name'] + '\33[39m')
+            print('This is a Windows VM\n')
+        elif os == None and exception != None:
+            print(exception + '\n')
+        else:
+            print('\033[1;32m' + instance['name'] + '\33[39m')
+            print('OS not supported!\n')
 main()
