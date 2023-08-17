@@ -37,8 +37,15 @@ def clone_repo():
     else:
         os.mkdir(path)
 
-    clone_repo = subprocess.run(f"git -C {path} clone https://github.com/rackspace-infrastructure-automation/mgcp-terraform-modules.git", universal_newlines=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+    clone_repo = subprocess.run(f"git -C {path} clone -b amend-0+ https://github.com/rackspace-infrastructure-automation/mgcp-terraform-modules.git", universal_newlines=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
     print (clone_repo)
+
+def request_webhook_secret (token, project_id, ddi):
+    url = f"https://watchman.api.manage.rackspace.com/v0/gcpProjects/{project_id}/webhooks"
+    headers = {'X-Auth-Token': token, 'x-tenant-id': ddi, 'Content-Type': 'application/json'}
+    secret = json.loads(requests.get(url, headers=headers).text)['webhooks'][0]['href']
+    return secret[secret.index("secret=") +7 : secret.index("&severity=")]
+
 
 # Requests token for janus auth
 def request_token(sso, password):
@@ -60,15 +67,35 @@ def janus_auth(token, project_id):
      else:
         return janus_response_code
 
+def url_index_conversion(index):
+    if index == 1:
+        return "first"
+    elif index == 2:
+        return "second"
+    elif index == 3:
+        return "third"
+
 # Request the required user inputs
 def request_input():
-    global project_id, email, deploy_nat, deploy_sql, sso, password 
+    global project_id, ddi, sso, password, urls
     sso = input("Please type your SSO: ")
     password = getpass(prompt="Please type your SSO password: ", stream=None)
     project_id = input("Please type the project ID where the alert policies will be deployed: ")
-    email = input("Please type the primary email contact to be used as the main notification channel: ")
-    deploy_nat = input("Deploy Cloud NAT alerts (if shared VPC for example)? Please type yes|no: ")
-    deploy_sql = input("Deploy Cloud SQL alerts? Please type yes|no: ")
+    ddi = input("Please type the Customer DDI: ")
+    while(True):
+        url_check_number = int(input("How many URL checks the customer would like to have configured? (Max 3 URL checks): "))
+        if url_check_number in range (1,4):
+            break
+        else:
+            print(f"\033[0;91mPlease enter a valid number!\033[0;m")
+
+    counter = 1
+    urls = []
+    while (counter <= url_check_number):
+        url = input(f"Please type the {url_index_conversion(counter)} URL (Example: https://www.rackspace.com): ")
+        urls.append(url)
+        counter = counter +1
+    urls = json.dumps(urls)
     print()
     print()
     print("These are the chosen values:")
@@ -76,15 +103,14 @@ def request_input():
     print(f"SSO = \033[0;32m{sso}\033[0;m")
     print(f"Password = \033[0;32m******\033[0;m")
     print(f"Project ID = \033[0;32m{project_id}\033[0;m")
-    print(f"Primary email address = \033[0;32m{email}\033[0;m")
-    print(f"Deploy NAT alerts?: \033[0;32m{deploy_nat}\033[0;m")
-    print(f"Deploy Cloud SQL alerts: \033[0;32m{deploy_sql}\033[0;m")
+    print(f"DDI = \033[0;32m{ddi}\033[0;m")
+    print(f"URLs to monitor = \033[0;32m{urls}\033[0;m")
     print()
 
 # Deploys the O+ monitors via terraform
-def terraform_deploy():
+def terraform_deploy(secret):
         subprocess.run("terraform init", stdout=subprocess.PIPE, shell=True)
-        output = json.loads('['+subprocess.check_output(f"terraform apply -json -var project_id={project_id} -var primary_email={email} -var deploy_nat_alerts={deploy_nat} -var deploy_sql_alerts={deploy_sql} -auto-approve", shell=True, universal_newlines=True).replace('\n', ',')[:-1]+']')
+        output = json.loads('['+subprocess.check_output(f"terraform apply -json -var project_id={project_id} -var watchman_token={secret} -var 'url_list={urls}' -auto-approve", shell=True, universal_newlines=True).replace('\n', ',')[:-1]+']')
         return json.dumps(output[-2]["@message"], indent=1)
 
 # Cleans up the local repo and script file
@@ -100,7 +126,7 @@ def main():
 
     accept_input = "no"
 
-    while accept_input != "yes": # Loops until inputs are confirmed
+    while (accept_input != "yes"): # Loops until inputs are confirmed
         request_input()
         accept_input = input("Are all the values correct? Please type yes|no: ")
         print()
@@ -112,12 +138,13 @@ def main():
     os.chdir(f"{path}/mgcp-terraform-modules/optimizer-plus-standard-alerts")
 
     token = request_token(sso, password)
+    secret = request_webhook_secret(token, project_id, ddi)
 
     janus_auth_response = janus_auth(token, project_id)
     if janus_auth_response:
-        print(f"\033[0;32m{terraform_deploy()}\033[0;m")
+        print(f"\033[0;32m{terraform_deploy(secret)}\033[0;m")
     else:
         print(f"\033[0;91mJanus failed to grant access to the project. Process aborted! Error: {janus_auth_response}\033[0;m")    
-    clean_up()
+    # clean_up()
 
 main()
