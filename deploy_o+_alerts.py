@@ -91,9 +91,9 @@ def request_input():
 
     counter = 0
     urls = []
-    if counter > 0:
-        while (counter <= url_check_number):
-            url = input(f"Please type the {url_index_conversion(counter)} URL (Example: https://www.rackspace.com): ")
+    if url_check_number > 0:
+        while (counter < url_check_number):
+            url = input(f"Please type the {url_index_conversion(counter + 1)} URL (Example: https://www.rackspace.com): ")
             urls.append(url)
             counter = counter +1
         urls = json.dumps(urls)
