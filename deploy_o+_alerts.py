@@ -84,18 +84,21 @@ def request_input():
     ddi = input("Please type the Customer DDI: ")
     while(True):
         url_check_number = int(input("How many URL checks the customer would like to have configured? (Max 3 URL checks): "))
-        if url_check_number in range (1,4):
+        if url_check_number in range (0,4):
             break
         else:
             print(f"\033[0;91mPlease enter a valid number!\033[0;m")
 
-    counter = 1
+    counter = 0
     urls = []
-    while (counter <= url_check_number):
-        url = input(f"Please type the {url_index_conversion(counter)} URL (Example: https://www.rackspace.com): ")
-        urls.append(url)
-        counter = counter +1
-    urls = json.dumps(urls)
+    if counter > 0:
+        while (counter <= url_check_number):
+            url = input(f"Please type the {url_index_conversion(counter)} URL (Example: https://www.rackspace.com): ")
+            urls.append(url)
+            counter = counter +1
+        urls = json.dumps(urls)
+    else:
+        urls = "[]"
     print()
     print()
     print("These are the chosen values:")
