@@ -37,7 +37,7 @@ def clone_repo():
     else:
         os.mkdir(path)
 
-    clone_repo = subprocess.run(f"git -C {path} clone -b amend-0+ https://github.com/rackspace-infrastructure-automation/mgcp-terraform-modules.git", universal_newlines=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+    clone_repo = subprocess.run(f"git -C {path} clone https://github.com/rackspace-infrastructure-automation/mgcp-terraform-modules.git", universal_newlines=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
     print (clone_repo)
 
 def request_webhook_secret (token, project_id, ddi):
@@ -94,8 +94,11 @@ def request_input():
     if url_check_number > 0:
         while (counter < url_check_number):
             url = input(f"Please type the {url_index_conversion(counter + 1)} URL (Example: https://www.rackspace.com): ")
-            urls.append(url)
-            counter = counter +1
+            if all(not url.startswith(items) for items in ["http://", "https://"]):
+                print("\033[0;91mThe URL is not in the corret format, please make sure type 'http://' or 'https://' at the beginning of the URL.\033[0;m")
+            else:
+                urls.append(url)
+                counter = counter +1
         urls = json.dumps(urls)
     else:
         urls = "[]"
@@ -148,6 +151,6 @@ def main():
         print(f"\033[0;32m{terraform_deploy(secret)}\033[0;m")
     else:
         print(f"\033[0;91mJanus failed to grant access to the project. Process aborted! Error: {janus_auth_response}\033[0;m")    
-    # clean_up()
+    clean_up()
 
 main()
